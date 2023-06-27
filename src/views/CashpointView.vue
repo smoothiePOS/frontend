@@ -27,7 +27,9 @@ export default defineComponent({
         return {
             products: {} as { [key: string]: Product },
             orders: {} as { [key: string]: number },
-            timer: -1
+            timer: -1,
+            lastOrderId: "",
+            debug: config.debug
         }
     },
     mounted() {
@@ -63,6 +65,34 @@ export default defineComponent({
                     })
                     console.log(data);
                 });
+        },
+        placeOrder() {
+            let order = [];
+            Object.keys(this.orders).forEach((product) => {
+                if (this.orders[product] > 0) {
+                    order.push({
+                        productId: product,
+                        amount: this.orders[product]
+                    })
+                }
+            })
+            fetch(config.baseUrl + "/cashpoint/order", {
+                method: "POST",
+                body: JSON.stringify({
+                    cashpoint: "0af8cfae-1517-11ee-90be-0242ac150008", //TODO: get cashpoint id
+                    products: order
+                })
+            })
+                .then(response => response.text())
+                .then(data => {
+                    this.lastOrderId = data;
+                    setTimeout(() => {
+                        this.lastOrderId = "";
+                    }, 5000);
+                });
+        },
+        fullscreen() {
+            document.body.requestFullscreen()
         }
     }
 })
@@ -70,8 +100,9 @@ export default defineComponent({
 
 <template>
     <div class="cashpoint">
+        <div style="position:absolute; top: 0; z-index: 20" v-show="lastOrderId !== '' && this.debug">Last Order Id: {{ this.lastOrderId }}</div>
         <div class="product_buttons">
-            <h1>Products</h1>
+            <h1 @click="fullscreen()">Products</h1>
             <div>
                 <div v-for="product in Object.keys(products)" :key="product">
                     <div class="product_button" :class="(!products[product].available) ? 'unavailable' : ''"
@@ -100,7 +131,7 @@ export default defineComponent({
             </tr>
             </table>
             <div class="options">
-                <div style="background: forestgreen">OK</div>
+                <div style="background: forestgreen" @click="placeOrder(); this.orders = {}">OK</div>
                 <div style="background: indianred" @click="this.orders = {}">CL</div>
             </div>
         </div>
