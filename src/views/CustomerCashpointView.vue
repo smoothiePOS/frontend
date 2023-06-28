@@ -16,7 +16,7 @@ export default defineComponent({
         }, 1000)
     },
     methods: {
-        fullscreen() 
+        fullscreen() {
             document.body.requestFullscreen()
         }
     }
