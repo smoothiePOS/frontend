@@ -1,143 +1,3 @@
-<script lang="ts">
-import config from "@/config";
-import {defineComponent} from "vue";
-
-interface product {
-    id: string,
-    name: string,
-    price: number,
-    available: boolean
-}
-
-class Product {
-    public name: string;
-    public price: number;
-    public available: boolean;
-
-    constructor(name: string, price: number, available: boolean) {
-        this.name = name;
-        this.price = price;
-        this.available = available;
-    }
-}
-
-export default defineComponent({
-    name: 'CashpointView',
-    data() {
-        return {
-            products: {} as { [key: string]: Product },
-            orders: {} as { [key: string]: number },
-            timer: -1,
-            lastOrderId: "",
-            debug: config.debug
-        }
-    },
-    mounted() {
-        this.update()
-        setInterval(() => {
-            this.update()
-        }, 5000);
-    },
-    beforeUnmount() {
-        clearInterval(this.timer);
-    },
-    methods: {
-        addProduct(product: string) {
-            if (this.products[product].available) {
-                this.orders[product] = (this.orders[product] ?? 0) + 1;
-            }
-        },
-        removeProduct(product: string) {
-            this.orders[product] = (this.orders[product] ?? 1) - 1 > 0 ? (this.orders[product] ?? 1) - 1 : 0;
-        },
-        clearProduct(product: string) {
-            this.orders[product] = 0;
-        },
-        update() {
-            fetch(config.baseUrl + "/cashpoint/products")
-                .then(response => response.json())
-                .then(data => {
-                    data.forEach((product: product) => {
-                        this.products[product.id] = new Product(product.name, product.price, product.available)
-                        if (!product.available) {
-                            this.orders[product.id] = 0;
-                        }
-                    })
-                    console.log(data);
-                });
-        },
-        placeOrder() {
-            let order = [];
-            Object.keys(this.orders).forEach((product) => {
-                if (this.orders[product] > 0) {
-                    order.push({
-                        productId: product,
-                        amount: this.orders[product]
-                    })
-                }
-            })
-            fetch(config.baseUrl + "/cashpoint/order", {
-                method: "POST",
-                body: JSON.stringify({
-                    cashpoint: "0af8cfae-1517-11ee-90be-0242ac150008", //TODO: get cashpoint id
-                    products: order
-                })
-            })
-                .then(response => response.text())
-                .then(data => {
-                    this.lastOrderId = data;
-                    setTimeout(() => {
-                        this.lastOrderId = "";
-                    }, 5000);
-                });
-        },
-        fullscreen() {
-            document.body.requestFullscreen()
-        }
-    }
-})
-</script>
-
-<template>
-    <div class="cashpoint">
-        <div style="position:absolute; top: 0; z-index: 20" v-show="lastOrderId !== '' && this.debug">Last Order Id: {{ this.lastOrderId }}</div>
-        <div class="product_buttons">
-            <h1 @click="fullscreen()">Products</h1>
-            <div>
-                <div v-for="product in Object.keys(products)" :key="product">
-                    <div class="product_button" :class="(!products[product].available) ? 'unavailable' : ''"
-                         @click="addProduct(product)">
-                        <span class="name">{{ products[product].name }}</span>
-                        <span class="price">{{ (products[product].price / 100).toFixed(2) }}€</span>
-                        <span>Menge: {{ orders[product] ?? 0 }}</span>
-                        <span class="product_button_action" @click.stop="removeProduct(product)">-</span>
-                        <span class="product_button_action" @click.stop="clearProduct(product)">CL</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="order">
-            <h2>Order</h2>
-            <table>
-                <tr>
-                    <th>Produkt</th>
-                    <th>Anzahl</th>
-                    <th>Preis</th>
-                </tr>
-            <tr v-for="order in Object.keys(this.orders)" :key="order">
-                <td>{{ products[order].name }} (je {{ (products[order].price / 100).toFixed(2) }}€)</td>
-                <td>{{ orders[order] }}</td>
-                <td>{{ (products[order].price * orders[order] / 100).toFixed(2) }}€</td>
-            </tr>
-            </table>
-            <div class="options">
-                <div style="background: forestgreen" @click="placeOrder(); this.orders = {}">OK</div>
-                <div style="background: indianred" @click="this.orders = {}">CL</div>
-            </div>
-        </div>
-    </div>
-</template>
-
 <style scoped>
 .cashpoint {
     display: flex;
@@ -225,3 +85,168 @@ export default defineComponent({
     height: 80px;
 }
 </style>
+
+<script lang="ts">
+import config from "@/config";
+import {defineComponent} from "vue";
+
+interface product {
+    id: string,
+    name: string,
+    price: number,
+    available: boolean
+}
+
+interface cashpoint {
+    name: string,
+    id: string | undefined,
+    available: boolean
+}
+
+class Product {
+    public name: string;
+    public price: number;
+    public available: boolean;
+
+    constructor(name: string, price: number, available: boolean) {
+        this.name = name;
+        this.price = price;
+        this.available = available;
+    }
+}
+
+export default defineComponent({
+    name: 'CashpointView',
+    data() {
+        return {
+            products: {} as { [key: string]: Product },
+            orders: {} as { [key: string]: number },
+            timer: -1,
+            lastOrderId: "",
+            debug: config.debug,
+            cashpoints: {} as { [key: string]: cashpoint },
+            cashpoint: undefined as cashpoint | undefined
+        }
+    },
+    mounted() {
+        this.getCashpoints()
+    },
+    beforeUnmount() {
+        clearInterval(this.timer);
+    },
+    methods: {
+        getCashpoints() {
+            fetch(config.baseUrl + "/cashpoints")
+                .then(response => response.json())
+                .then(data => {
+                    this.cashpoints = data.cashpoints;
+                });
+        },
+        addProduct(product: string) {
+            if (this.products[product].available) {
+                this.orders[product] = (this.orders[product] ?? 0) + 1;
+            }
+        },
+        removeProduct(product: string) {
+            this.orders[product] = (this.orders[product] ?? 1) - 1 > 0 ? (this.orders[product] ?? 1) - 1 : 0;
+        },
+        clearProduct(product: string) {
+            this.orders[product] = 0;
+        },
+        update() {
+            fetch(config.baseUrl + "/cashpoint/products")
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach((product: product) => {
+                        this.products[product.id] = new Product(product.name, product.price, product.available)
+                        if (!product.available) {
+                            this.orders[product.id] = 0;
+                        }
+                    })
+                    console.log(data);
+                });
+        },
+        placeOrder() {
+            let order: { productId: string; amount: number; }[] = [];
+            Object.keys(this.orders).forEach((product) => {
+                if (this.orders[product] > 0) {
+                    order.push({
+                        productId: product,
+                        amount: this.orders[product]
+                    })
+                }
+            })
+            fetch(config.baseUrl + "/cashpoint/order", {
+                method: "POST",
+                body: JSON.stringify({
+                    cashpoint: this.cashpoint?.id,
+                    products: order
+                })
+            })
+                .then(response => response.text())
+                .then(data => {
+                    this.lastOrderId = data;
+                    setTimeout(() => {
+                        this.lastOrderId = "";
+                    }, 5000);
+                });
+        },
+        fullscreen() {
+            document.body.requestFullscreen()
+        },
+        setup(selectedCashpoint: string) {
+            this.cashpoint = this.cashpoints[selectedCashpoint]
+            this.cashpoint.id = selectedCashpoint;
+            this.timer = setInterval(() => {
+                this.update()
+            }, 1000);
+        }
+    }
+})
+</script>
+
+<template>
+    <div class="cashpoint" v-if="this.cashpoint !== undefined">
+        <div style="position:absolute; top: 0; z-index: 20" v-show="lastOrderId !== '' && this.debug">Last Order Id: {{ this.lastOrderId }}</div>
+        <div class="product_buttons">
+            <h1 @click="fullscreen()">Cashpoint {{ this.cashpoint.name }}</h1>
+            <div>
+                <div v-for="product in Object.keys(products)" :key="product">
+                    <div class="product_button" :class="(!products[product].available) ? 'unavailable' : ''"
+                         @click="addProduct(product)">
+                        <span class="name">{{ products[product].name }}</span>
+                        <span class="price">{{ (products[product].price / 100).toFixed(2) }}€</span>
+                        <span>Menge: {{ orders[product] ?? 0 }}</span>
+                        <span class="product_button_action" @click.stop="removeProduct(product)">-</span>
+                        <span class="product_button_action" @click.stop="clearProduct(product)">CL</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="order">
+            <h2>Order</h2>
+            <table>
+                <tr>
+                    <th>Produkt</th>
+                    <th>Anzahl</th>
+                    <th>Preis</th>
+                </tr>
+            <tr v-for="order in Object.keys(this.orders)" :key="order">
+                <td>{{ products[order].name }} (je {{ (products[order].price / 100).toFixed(2) }}€)</td>
+                <td>{{ orders[order] }}</td>
+                <td>{{ (products[order].price * orders[order] / 100).toFixed(2) }}€</td>
+            </tr>
+            </table>
+            <div class="options">
+                <div style="background: forestgreen" @click="placeOrder(); this.orders = {}">OK</div>
+                <div style="background: indianred" @click="this.orders = {}">CL</div>
+            </div>
+        </div>
+    </div>
+    <div v-else>
+        <h1>Select cashpoint</h1>
+        <select>
+            <option v-for="cashpoint in Object.keys(cashpoints)" :key="cashpoint" @click="setup(cashpoint)">{{ cashpoints[cashpoint].name }}</option>
+        </select>
+    </div>
+</template>
