@@ -1,6 +1,8 @@
 import {createRouter, createWebHistory, RouteRecordRaw} from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import CashpointView from "@/views/CashpointView.vue";
+import CustomerCashpointView from "@/views/CustomerCashpointView.vue";
+import CustomerCashpointSelectView from "@/views/CustomerCashpointSelectView.vue";
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -12,7 +14,19 @@ const routes: Array<RouteRecordRaw> = [
         path: '/cashpoint',
         name: 'cashpoint',
         component: CashpointView
-    }
+    },
+    {
+        path: '/cashpoint/customer/:id',
+        name: 'cashpoint-customer-id',
+        component: CustomerCashpointView,
+        props: true
+    },
+    {
+        path: '/cashpoint/customer',
+        name: 'cashpoint-customer',
+        component: CustomerCashpointSelectView,
+        props: false
+    },
 ]
 
 const router = createRouter({
