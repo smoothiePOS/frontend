@@ -83,6 +83,41 @@
     background: gray;
     height: 80px;
 }
+
+
+.payment {
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: rgba(0, 0, 0, .8);
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    align-items: center;
+    vertical-align: center;
+}
+
+.payment > div {
+    vertical-align: center;
+    background: #050505;
+    padding: 10px;
+}
+
+#payment_keypad {
+    display: flex;
+}
+
+#payment_keypad td {
+    width: 80px;
+    height: 80px;
+    font-size: 40px;
+    text-align: center;
+    vertical-align: center;
+    background: orange;
+    outline: 1pt solid #050505;
+}
 </style>
 
 <script lang="ts">
@@ -109,7 +144,7 @@ class Product {
     public available: boolean;
     public deposit: number;
 
-    constructor(name: string, price: number, deposit:number, available: boolean) {
+    constructor(name: string, price: number, deposit: number, available: boolean) {
         this.name = name;
         this.price = price;
         this.deposit = deposit;
@@ -127,7 +162,9 @@ export default defineComponent({
             lastOrderId: "",
             debug: config.debug,
             cashpoints: {} as { [key: string]: cashpoint },
-            cashpoint: undefined as cashpoint | undefined
+            cashpoint: undefined as cashpoint | undefined,
+            enteredAmount: "0",
+            showKeypad: false
         }
     },
     mounted() {
@@ -177,30 +214,20 @@ export default defineComponent({
                     console.log(data);
                 });
         },
+        openKeypad() {
+            if (Object.keys(this.orders).length > 0) {
+                this.enteredAmount = "0";
+                this.showKeypad = true;
+            }
+        },
         placeOrder() {
-            let order: { productId: string; amount: number; }[] = [];
-            Object.keys(this.orders).forEach((product) => {
-                if (this.orders[product] > 0) {
-                    order.push({
-                        productId: product,
-                        amount: this.orders[product]
-                    })
-                }
-            })
-            fetch(config.baseUrl + "/cashpoint/order", {
-                method: "POST",
-                body: JSON.stringify({
-                    cashpoint: this.cashpoint?.id,
-                    products: order
-                })
-            })
+            fetch(config.baseUrl + "/cashpoint/" + this.cashpoint?.id + "/order/rt/confirm")
                 .then(response => response.text())
                 .then(data => {
-                    this.lastOrderId = data;
-                    setTimeout(() => {
-                        this.lastOrderId = "";
-                    }, 5000);
-                });
+                    if (data === "OK") {
+                        this.orders = {};
+                    }
+                })
         },
         fullscreen() {
             document.body.requestFullscreen()
@@ -220,7 +247,33 @@ export default defineComponent({
                         if (data === "OK") this.orders = {};
                     })
             }
-        }
+        },
+        addEnteredAmount(char: string) {
+            if (char == "," && this.enteredAmount.includes(",")) {
+                return;
+            }
+            if (this.enteredAmount.includes(",") && this.enteredAmount.split(",")[1].length >= 2) {
+                return;
+            }
+            if (char == "0" && this.enteredAmount == "0") {
+                return;
+            }
+            if (this.enteredAmount == "0") {
+                if (char == ",") {
+                    this.enteredAmount += char;
+                } else {
+                    this.enteredAmount = char;
+                }
+            } else {
+                this.enteredAmount += char;
+            }
+        },
+        removeEnteredAmount() {
+            this.enteredAmount = this.enteredAmount.substring(0, this.enteredAmount.length - 1);
+            if (this.enteredAmount == "") {
+                this.enteredAmount = "0";
+            }
+        },
     }
 })
 </script>
@@ -264,28 +317,38 @@ export default defineComponent({
                     <table>
                         <tr>
                             <td>Zwischen</td>
-                            <td>{{ (Object.keys(this.orders).length > 0) ? ((Object.keys(this.orders).map((product) => {
-                                return products[product].price * orders[product]
-                            }).reduce((a, b) => a + b) / 100).toFixed(2)) : 0 }}€</td>
+                            <td>{{
+                                    (Object.keys(this.orders).length > 0) ? ((Object.keys(this.orders).map((product) => {
+                                        return products[product].price * orders[product]
+                                    }).reduce((a, b) => a + b) / 100).toFixed(2)) : 0
+                                }}€
+                            </td>
                         </tr>
                         <tr>
                             <td>Pfand</td>
-                            <td>{{ (Object.keys(this.orders).length > 0) ? ((Object.keys(this.orders).map((product) => {
-                            return products[product].deposit * orders[product]
-                        }).reduce((a, b) => a + b) / 100).toFixed(2)) : 0 }}€</td>
+                            <td>{{
+                                    (Object.keys(this.orders).length > 0) ? ((Object.keys(this.orders).map((product) => {
+                                        return products[product].deposit * orders[product]
+                                    }).reduce((a, b) => a + b) / 100).toFixed(2)) : 0
+                                }}€
+                            </td>
                         </tr>
                         <tr>
                             <td><b>Total</b></td>
-                            <td><b>{{ (Object.keys(this.orders).length > 0) ? ((Object.keys(this.orders).map((product) => {
-                                return products[product].price * orders[product]
-                            }).reduce((a, b) => a + b) / 100 + Object.keys(this.orders).map((product) => {
-                                return products[product].deposit * orders[product]
-                            }).reduce((a, b) => a + b) / 100).toFixed(2)) : 0 }}€</b></td>
+                            <td><b>{{
+                                    (Object.keys(this.orders).length > 0) ? ((Object.keys(this.orders).map((product) => {
+                                        return products[product].price * orders[product]
+                                    }).reduce((a, b) => a + b) / 100 + Object.keys(this.orders).map((product) => {
+                                        return products[product].deposit * orders[product]
+                                    }).reduce((a, b) => a + b) / 100).toFixed(2)) : 0
+                                }}€</b></td>
                         </tr>
                     </table>
                 </div>
                 <div style="display: flex">
-                    <div style="background: forestgreen" @click="placeOrder(); this.orders = {}" class="product_button_action">OK</div>
+                    <div style="background: forestgreen; user-select: none" @click="openKeypad()"
+                         class="product_button_action">OK
+                    </div>
                     <div style="background: indianred" @click="clearOrder" class="product_button_action">CL</div>
                 </div>
             </div>
@@ -298,5 +361,55 @@ export default defineComponent({
                 {{ cashpoints[cashpoint].name }}
             </option>
         </select>
+    </div>
+
+    <div class="payment" v-show="this.showKeypad">
+        <div>
+            <h1>Payment</h1>
+            <div id="payment_entered" style="font-size: 40px; outline: 1pt solid gray">{{ enteredAmount }}€</div>
+            <div id="payment_keypad">
+                <table style="user-select: none; border-collapse: collapse">
+                    <tr>
+                        <td @click="addEnteredAmount('9')">9</td>
+                        <td @click="addEnteredAmount('8')">8</td>
+                        <td @click="addEnteredAmount('7')">7</td>
+                        <td rowspan="2" style="background: green" @click="placeOrder(); this.showKeypad = false">OK</td>
+                    </tr>
+                    <tr>
+                        <td @click="addEnteredAmount('6')">6</td>
+                        <td @click="addEnteredAmount('5')">5</td>
+                        <td @click="addEnteredAmount('4')">4</td>
+                    </tr>
+                    <tr>
+                        <td @click="addEnteredAmount('3')">3</td>
+                        <td @click="addEnteredAmount('2')">2</td>
+                        <td @click="addEnteredAmount('1')">1</td>
+                        <td @click="this.showKeypad = false" style="background: indianred">X</td>
+                    </tr>
+                    <tr>
+                        <td @click="addEnteredAmount('0')" colspan="2">0</td>
+                        <td @click="addEnteredAmount(',')">,</td>
+                        <td @click="removeEnteredAmount()">&lt;</td>
+                    </tr>
+                </table>
+                <div style="margin-left: 5px">
+                    <h2>Zu zahlen: {{
+                            (Object.keys(this.orders).length > 0) ? ((Object.keys(this.orders).map((product) => {
+                                return products[product].price * orders[product]
+                            }).reduce((a, b) => a + b) / 100 + Object.keys(this.orders).map((product) => {
+                                return products[product].deposit * orders[product]
+                            }).reduce((a, b) => a + b) / 100).toFixed(2)) : 0
+                        }}€</h2>
+                    <h2>Gegeben: {{ parseFloat(this.enteredAmount.replace(",", ".")).toFixed(2) }}€</h2>
+                    <h2>Rückgeld: {{
+                            (parseFloat(this.enteredAmount.replace(",", ".")).toFixed(2) - ((Object.keys(this.orders).length > 0) ? ((Object.keys(this.orders).map((product) => {
+                                return products[product].price * orders[product]
+                            }).reduce((a, b) => a + b) / 100 + Object.keys(this.orders).map((product) => {
+                                return products[product].deposit * orders[product]
+                            }).reduce((a, b) => a + b) / 100).toFixed(2)) : 0)).toFixed(2)
+                        }}€</h2>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
