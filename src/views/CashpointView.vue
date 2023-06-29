@@ -64,13 +64,12 @@
 .options {
     position: fixed;
     bottom: 0;
-    display: flex;
+    display: block;
     justify-content: center;
     align-content: center;
-    text-align: center;
 }
 
-.options div {
+.options .product_button_action {
     color: white;
     display: flex;
     vertical-align: center;
@@ -94,6 +93,7 @@ interface product {
     id: string,
     name: string,
     price: number,
+    deposit: number,
     available: boolean
 }
 
@@ -107,10 +107,12 @@ class Product {
     public name: string;
     public price: number;
     public available: boolean;
+    public deposit: number;
 
-    constructor(name: string, price: number, available: boolean) {
+    constructor(name: string, price: number, deposit:number, available: boolean) {
         this.name = name;
         this.price = price;
+        this.deposit = deposit;
         this.available = available;
     }
 }
@@ -167,7 +169,7 @@ export default defineComponent({
                 .then(response => response.json())
                 .then(data => {
                     data.forEach((product: product) => {
-                        this.products[product.id] = new Product(product.name, product.price, product.available)
+                        this.products[product.id] = new Product(product.name, product.price, product.deposit, product.available)
                         if (!product.available) {
                             this.orders[product.id] = 0;
                         }
@@ -258,8 +260,34 @@ export default defineComponent({
                 </tr>
             </table>
             <div class="options">
-                <div style="background: forestgreen" @click="placeOrder(); this.orders = {}">OK</div>
-                <div style="background: indianred" @click="clearOrder">CL</div>
+                <div style="display: block;font-size: 20pt">
+                    <table>
+                        <tr>
+                            <td>Zwischen</td>
+                            <td>{{ (Object.keys(this.orders).length > 0) ? ((Object.keys(this.orders).map((product) => {
+                                return products[product].price * orders[product]
+                            }).reduce((a, b) => a + b) / 100).toFixed(2)) : 0 }}€</td>
+                        </tr>
+                        <tr>
+                            <td>Pfand</td>
+                            <td>{{ (Object.keys(this.orders).length > 0) ? ((Object.keys(this.orders).map((product) => {
+                            return products[product].deposit * orders[product]
+                        }).reduce((a, b) => a + b) / 100).toFixed(2)) : 0 }}€</td>
+                        </tr>
+                        <tr>
+                            <td><b>Total</b></td>
+                            <td><b>{{ (Object.keys(this.orders).length > 0) ? ((Object.keys(this.orders).map((product) => {
+                                return products[product].price * orders[product]
+                            }).reduce((a, b) => a + b) / 100 + Object.keys(this.orders).map((product) => {
+                                return products[product].deposit * orders[product]
+                            }).reduce((a, b) => a + b) / 100).toFixed(2)) : 0 }}€</b></td>
+                        </tr>
+                    </table>
+                </div>
+                <div style="display: flex">
+                    <div style="background: forestgreen" @click="placeOrder(); this.orders = {}" class="product_button_action">OK</div>
+                    <div style="background: indianred" @click="clearOrder" class="product_button_action">CL</div>
+                </div>
             </div>
         </div>
     </div>
