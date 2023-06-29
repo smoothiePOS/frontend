@@ -178,29 +178,16 @@ export default defineComponent({
                 });
         },
         placeOrder() {
-            let order: { productId: string; amount: number; }[] = [];
-            Object.keys(this.orders).forEach((product) => {
-                if (this.orders[product] > 0) {
-                    order.push({
-                        productId: product,
-                        amount: this.orders[product]
-                    })
-                }
-            })
-            fetch(config.baseUrl + "/cashpoint/order", {
-                method: "POST",
-                body: JSON.stringify({
-                    cashpoint: this.cashpoint?.id,
-                    products: order
-                })
-            })
+            if (this.orders.length == 0) {
+                return;
+            }
+            fetch(config.baseUrl + "/cashpoint/" + this.cashpoint?.id + "/order/rt/confirm")
                 .then(response => response.text())
                 .then(data => {
-                    this.lastOrderId = data;
-                    setTimeout(() => {
-                        this.lastOrderId = "";
-                    }, 5000);
-                });
+                    if (data === "OK") {
+                        this.orders = {};
+                    }
+                })
         },
         fullscreen() {
             document.body.requestFullscreen()
@@ -285,7 +272,7 @@ export default defineComponent({
                     </table>
                 </div>
                 <div style="display: flex">
-                    <div style="background: forestgreen" @click="placeOrder(); this.orders = {}" class="product_button_action">OK</div>
+                    <div style="background: forestgreen" @click="placeOrder" class="product_button_action">OK</div>
                     <div style="background: indianred" @click="clearOrder" class="product_button_action">CL</div>
                 </div>
             </div>
