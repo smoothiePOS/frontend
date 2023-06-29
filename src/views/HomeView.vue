@@ -2,6 +2,7 @@
     <h1>Home</h1>
     <ul>
         <li><router-link to="/cashpoint">Cashpoint View</router-link></li>
+        <li><router-link to="/cashpoint/customer">Cashpoint Customer View</router-link></li>
     </ul>
 </template>
 

@@ -142,16 +142,25 @@ export default defineComponent({
                     this.cashpoints = data.cashpoints;
                 });
         },
-        addProduct(product: string) {
+        changeProduct(product: string, amount: number | undefined) {
             if (this.products[product].available) {
-                this.orders[product] = (this.orders[product] ?? 0) + 1;
+                fetch(config.baseUrl + "/cashpoint/" + this.cashpoint?.id + "/order/rt", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        productId: product,
+                        amount: amount ?? null
+                    })
+                }).then(response => response.text())
+                    .then(data => {
+                        this.orders[product] = parseInt(data);
+                        if (this.orders[product] == 0) {
+                            delete this.orders[product];
+                        }
+                    })
             }
-        },
-        removeProduct(product: string) {
-            this.orders[product] = (this.orders[product] ?? 1) - 1 > 0 ? (this.orders[product] ?? 1) - 1 : 0;
-        },
-        clearProduct(product: string) {
-            this.orders[product] = 0;
         },
         update() {
             fetch(config.baseUrl + "/cashpoint/products")
@@ -200,6 +209,15 @@ export default defineComponent({
             this.timer = setInterval(() => {
                 this.update()
             }, 1000);
+        },
+        clearOrder() {
+            if (confirm("Diese Bestellung wirklich löschen?")) {
+                fetch(config.baseUrl + "/cashpoint/" + this.cashpoint?.id + "/order/rt/clear")
+                    .then(response => response.text())
+                    .then(data => {
+                        if (data === "OK") this.orders = {};
+                    })
+            }
         }
     }
 })
@@ -207,18 +225,20 @@ export default defineComponent({
 
 <template>
     <div class="cashpoint" v-if="this.cashpoint !== undefined">
-        <div style="position:absolute; top: 0; z-index: 20" v-show="lastOrderId !== '' && this.debug">Last Order Id: {{ this.lastOrderId }}</div>
+        <div style="position:absolute; top: 0; z-index: 20" v-show="lastOrderId !== '' && this.debug">Last Order Id:
+            {{ this.lastOrderId }}
+        </div>
         <div class="product_buttons">
             <h1 @click="fullscreen()">Cashpoint {{ this.cashpoint.name }}</h1>
             <div>
                 <div v-for="product in Object.keys(products)" :key="product">
                     <div class="product_button" :class="(!products[product].available) ? 'unavailable' : ''"
-                         @click="addProduct(product)">
+                         @click="changeProduct(product, 1)">
                         <span class="name">{{ products[product].name }}</span>
                         <span class="price">{{ (products[product].price / 100).toFixed(2) }}€</span>
                         <span>Menge: {{ orders[product] ?? 0 }}</span>
-                        <span class="product_button_action" @click.stop="removeProduct(product)">-</span>
-                        <span class="product_button_action" @click.stop="clearProduct(product)">CL</span>
+                        <span class="product_button_action" @click.stop="changeProduct(product, -1)">-</span>
+                        <span class="product_button_action" @click.stop="changeProduct(product, undefined)">CL</span>
                     </div>
                 </div>
             </div>
@@ -231,22 +251,24 @@ export default defineComponent({
                     <th>Anzahl</th>
                     <th>Preis</th>
                 </tr>
-            <tr v-for="order in Object.keys(this.orders)" :key="order">
-                <td>{{ products[order].name }} (je {{ (products[order].price / 100).toFixed(2) }}€)</td>
-                <td>{{ orders[order] }}</td>
-                <td>{{ (products[order].price * orders[order] / 100).toFixed(2) }}€</td>
-            </tr>
+                <tr v-for="order in Object.keys(this.orders)" :key="order">
+                    <td>{{ products[order].name }} (je {{ (products[order].price / 100).toFixed(2) }}€)</td>
+                    <td>{{ orders[order] }}</td>
+                    <td>{{ (products[order].price * orders[order] / 100).toFixed(2) }}€</td>
+                </tr>
             </table>
             <div class="options">
                 <div style="background: forestgreen" @click="placeOrder(); this.orders = {}">OK</div>
-                <div style="background: indianred" @click="this.orders = {}">CL</div>
+                <div style="background: indianred" @click="clearOrder">CL</div>
             </div>
         </div>
     </div>
     <div v-else>
         <h1>Select cashpoint</h1>
         <select>
-            <option v-for="cashpoint in Object.keys(cashpoints)" :key="cashpoint" @click="setup(cashpoint)">{{ cashpoints[cashpoint].name }}</option>
+            <option v-for="cashpoint in Object.keys(cashpoints)" :key="cashpoint" @click="setup(cashpoint)">
+                {{ cashpoints[cashpoint].name }}
+            </option>
         </select>
     </div>
 </template>
