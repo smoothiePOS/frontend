@@ -3,6 +3,7 @@ import HomeView from '../views/HomeView.vue'
 import CashpointView from "@/views/CashpointView.vue";
 import CustomerCashpointView from "@/views/CustomerCashpointView.vue";
 import CustomerCashpointSelectView from "@/views/CustomerCashpointSelectView.vue";
+import KitchenView from "@/views/KitchenView.vue";
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -27,6 +28,11 @@ const routes: Array<RouteRecordRaw> = [
         component: CustomerCashpointSelectView,
         props: false
     },
+    {
+        path: '/kitchen',
+        name: 'kitchen',
+        component: KitchenView
+    }
 ]
 
 const router = createRouter({
