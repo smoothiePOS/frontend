@@ -132,12 +132,6 @@ interface product {
     available: boolean
 }
 
-interface cashpoint {
-    name: string,
-    id: string | undefined,
-    available: boolean
-}
-
 class Product {
     public name: string;
     public price: number;
@@ -154,6 +148,7 @@ class Product {
 
 export default defineComponent({
     name: 'CashpointView',
+    props: ["id"],
     data() {
         return {
             products: {} as { [key: string]: Product },
@@ -161,29 +156,21 @@ export default defineComponent({
             timer: -1,
             lastOrderId: "",
             debug: config.debug,
-            cashpoints: {} as { [key: string]: cashpoint },
-            cashpoint: undefined as cashpoint | undefined,
             enteredAmount: "0",
-            showKeypad: false
+            showKeypad: false,
+            id: this.$props.id
         }
     },
     mounted() {
-        this.getCashpoints()
+        this.update();
     },
     beforeUnmount() {
         clearInterval(this.timer);
     },
     methods: {
-        getCashpoints() {
-            fetch(config.baseUrl + "/cashpoints")
-                .then(response => response.json())
-                .then(data => {
-                    this.cashpoints = data.cashpoints;
-                });
-        },
         changeProduct(product: string, amount: number | undefined) {
             if (this.products[product].available) {
-                fetch(config.baseUrl + "/cashpoint/" + this.cashpoint?.id + "/order/rt", {
+                fetch(config.baseUrl + "/cashpoint/" + this.id + "/order/rt", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -221,7 +208,7 @@ export default defineComponent({
             }
         },
         placeOrder() {
-            fetch(config.baseUrl + "/cashpoint/" + this.cashpoint?.id + "/order/rt/confirm")
+            fetch(config.baseUrl + "/cashpoint/" + this.id + "/order/rt/confirm")
                 .then(response => response.text())
                 .then(data => {
                     if (data === "OK") {
@@ -232,16 +219,14 @@ export default defineComponent({
         fullscreen() {
             document.body.requestFullscreen()
         },
-        setup(selectedCashpoint: string) {
-            this.cashpoint = this.cashpoints[selectedCashpoint]
-            this.cashpoint.id = selectedCashpoint;
+        setup() {
             this.timer = setInterval(() => {
                 this.update()
             }, 1000);
         },
         clearOrder() {
             if (confirm("Diese Bestellung wirklich löschen?")) {
-                fetch(config.baseUrl + "/cashpoint/" + this.cashpoint?.id + "/order/rt/clear")
+                fetch(config.baseUrl + "/cashpoint/" + this.id + "/order/rt/clear")
                     .then(response => response.text())
                     .then(data => {
                         if (data === "OK") this.orders = {};
@@ -279,12 +264,12 @@ export default defineComponent({
 </script>
 
 <template>
-    <div class="cashpoint" v-if="this.cashpoint !== undefined">
+    <div class="cashpoint">
         <div style="position:absolute; top: 0; z-index: 20" v-show="lastOrderId !== '' && this.debug">Last Order Id:
             {{ this.lastOrderId }}
         </div>
         <div class="product_buttons">
-            <h1 @click="fullscreen()">Cashpoint {{ this.cashpoint.name }}</h1>
+            <h1 @click="fullscreen()">Cashpoint</h1>
             <div>
                 <div v-for="product in Object.keys(products)" :key="product">
                     <div class="product_button" :class="(!products[product].available) ? 'unavailable' : ''"
@@ -353,14 +338,6 @@ export default defineComponent({
                 </div>
             </div>
         </div>
-    </div>
-    <div v-else>
-        <h1>Select cashpoint</h1>
-        <select>
-            <option v-for="cashpoint in Object.keys(cashpoints)" :key="cashpoint" @click="setup(cashpoint)">
-                {{ cashpoints[cashpoint].name }}
-            </option>
-        </select>
     </div>
 
     <div class="payment" v-show="this.showKeypad">
