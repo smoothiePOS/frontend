@@ -208,7 +208,7 @@ export default defineComponent({
                     data.forEach((product: product) => {
                         this.products[product.id] = new Product(product.name, product.price, product.deposit, product.available)
                         if (!product.available) {
-                            this.orders[product.id] = 0;
+                            delete this.orders[product.id];
                         }
                     })
                     console.log(data);

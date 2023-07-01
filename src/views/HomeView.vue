@@ -3,6 +3,7 @@
     <ul>
         <li><router-link to="/cashpoint">Cashpoint View</router-link></li>
         <li><router-link to="/cashpoint/customer">Cashpoint Customer View</router-link></li>
+        <li><router-link to="/kitchen">Kitchen View</router-link></li>
     </ul>
 </template>
 
