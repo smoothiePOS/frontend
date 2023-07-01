@@ -4,6 +4,7 @@ import CashpointView from "@/views/CashpointView.vue";
 import CustomerCashpointView from "@/views/CustomerCashpointView.vue";
 import CustomerCashpointSelectView from "@/views/CustomerCashpointSelectView.vue";
 import KitchenView from "@/views/KitchenView.vue";
+import CashpointSelectView from "@/views/CashpointSelectView.vue";
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -12,9 +13,15 @@ const routes: Array<RouteRecordRaw> = [
         component: HomeView
     },
     {
-        path: '/cashpoint',
-        name: 'cashpoint',
-        component: CashpointView
+        path: '/cashpoint/staff',
+        name: 'cashpoint-staff',
+        component: CashpointSelectView
+    },
+    {
+        path: '/cashpoint/staff/:id',
+        name: 'cashpoint-staff-id',
+        component: CashpointView,
+        props: true
     },
     {
         path: '/cashpoint/customer/:id',
