@@ -18,3 +18,9 @@ export default defineComponent({
   },
 });
 </script>
+
+<style>
+a {
+    color: white;
+}
+</style>
