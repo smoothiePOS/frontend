@@ -12,7 +12,7 @@ export default defineComponent({
     name: 'CustomerCashpointSelectView',
     data() {
         return {
-            cashpoints: {} as { [key: string]: cashpoint },
+            cashpoints: [] as cashpoint[],
         }
     },
     mounted() {
@@ -23,7 +23,13 @@ export default defineComponent({
             fetch(config.baseUrl + "/cashpoints")
                 .then(response => response.json())
                 .then(data => {
-                    this.cashpoints = data.cashpoints;
+                    Object.keys(data).forEach(key => {
+                        this.cashpoints.push({
+                            name: data[key].name,
+                            id: key,
+                            available: data[key].available
+                        })
+                    })
                 });
         },
     }
@@ -31,12 +37,11 @@ export default defineComponent({
 </script>
 
 <template>
-    <div v-if="this.cashpoint !== undefined"></div>
-    <div v-else>
+    <div>
         <h1>Select cashpoint</h1>
         <ul>
-            <li v-for="cashpoint in Object.keys(this.cashpoints)" :key="cashpoint">
-                <router-link :to="'/cashpoint/customer/' + cashpoint">{{ cashpoints[cashpoint].name }}</router-link>
+            <li v-for="cashpoint in this.cashpoints" :key="cashpoint">
+                <router-link :to="'/cashpoint/customer/' + cashpoint.id">{{ cashpoint.name }}</router-link>
             </li>
         </ul>
     </div>
