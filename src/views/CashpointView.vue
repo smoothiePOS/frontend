@@ -53,6 +53,7 @@
     background: #fff;
 }
 
+/*noinspection CssUnusedSymbol*/
 .unavailable {
     background: #666 !important;
 }
@@ -209,11 +210,8 @@ export default defineComponent({
         },
         placeOrder() {
             fetch(config.baseUrl + "/cashpoint/" + this.id + "/order/rt/confirm")
-                .then(response => response.text())
-                .then(data => {
-                    if (data === "OK") {
-                        this.orders = {};
-                    }
+                .then(response => {
+                    if (response.status == 200) this.orders = {};
                 })
         },
         fullscreen() {
@@ -227,9 +225,8 @@ export default defineComponent({
         clearOrder() {
             if (confirm("Diese Bestellung wirklich löschen?")) {
                 fetch(config.baseUrl + "/cashpoint/" + this.id + "/order/rt/clear")
-                    .then(response => response.text())
-                    .then(data => {
-                        if (data === "OK") this.orders = {};
+                    .then(response => {
+                        if (response.status == 200) this.orders = {};
                     })
             }
         },
