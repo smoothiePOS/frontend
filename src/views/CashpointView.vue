@@ -162,7 +162,7 @@ export default defineComponent({
         }
     },
     mounted() {
-        this.update();
+        this.setup()
     },
     beforeUnmount() {
         clearInterval(this.timer);
