@@ -1,5 +1,6 @@
 export default {
-    baseUrl: "https://julius.familie-babies.de/smoothie/api/",
+    baseUrl: "http://192.168.3.102:8080",
+    adFullSizeImageBaseUrl: "https://julius.familie-babies.de/static/img/",
     debug: true,
     dateFormat: {
         year: 'numeric',
@@ -10,4 +11,11 @@ export default {
         second: '2-digit',
         hour12: false
     },
+    advertisement: {
+        fullSizeImageBaseUrl: "https://julius.familie-babies.de/static/img/",
+        fullSizeImageExtension: ".png",
+        adDuration: 7000,
+        adInterval: 15000,
+        title: "Smoothiestand Klasse 9a - Unser Angebot",
+    }
 }
