@@ -10,6 +10,7 @@ interface product {
 interface order {
     id: string
     products: product[]
+    extra: string
     date: number
 }
 
@@ -106,6 +107,7 @@ export default defineComponent({
                 <!--suppress TypeScriptValidateTypes -->
                 <div class="order_header">{{ new Date(order.date).toLocaleString("de-DE", config.dateFormat) }}</div>
                 <div class="order_header_done" @click="finishOrder(order.id)">Beenden</div>
+                <div v-show="order.extra != null" style="width: 100%; margin-left: 15px">{{ order.extra }}</div>
                 <table class="order_table">
                     <tr v-for="product in order.products" :key="product">
                         <td style="width: 30vw">{{ product.product }}</td>
