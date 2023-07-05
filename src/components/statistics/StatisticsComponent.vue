@@ -85,7 +85,7 @@ export default defineComponent({
             const revenueData = {
                 labels: revenueLabels,
                 datasets: [{
-                    label: "Umsatz",
+                    label: "Umsatz pro Produkt",
                     data: this.products.map(product => (product.amount * product.price)/100),
                 }]
             }
