@@ -11,4 +11,11 @@ export default {
         second: '2-digit',
         hour12: false
     },
+    advertisement: {
+        fullSizeImageBaseUrl: "https://julius.familie-babies.de/static/img/",
+        fullSizeImageExtension: ".png",
+        adDuration: 7000,
+        adInterval: 15000,
+        title: "Smoothiestand Klasse 9a - Unser Angebot",
+    }
 }

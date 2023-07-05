@@ -5,7 +5,7 @@ import config from "@/config";
 import {isFunction} from "@vue/shared";
 
 interface product {
-    id: number
+    id: string
     name: string
     price: number
     description: string
@@ -15,46 +15,89 @@ interface product {
 
 export default defineComponent({
     name: 'AdvertisementView',
+    computed: {
+        config() {
+            return config
+        }
+    },
     data() {
         return {
-            products: [] as product[]
+            products: [] as product[],
+            fullscreenProductId: "",
+            adOpacity: 0,
+            firstRun: true
         }
     },
     methods: {
-        isFunction,
         update() {
             fetch(config.baseUrl + "/advertisement/product")
                 .then(response => response.json())
                 .then(data => {
                     this.products = data;
-                    console.log(this.products)
+                    if (this.firstRun) {
+                        this.products.forEach(product => {
+                            let img = new Image()
+                            img.src = product.image
+                        })
+                        this.firstRun = false;
+                    }
                 })
                 .catch(error => console.error(error));
+        },
+        async nextAd() {
+            const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+            if (this.products.length == 0) {
+                await sleep(1000);
+                await this.nextAd();
+                return;
+            }
+            await sleep(config.advertisement.adInterval);
+            if (this.fullscreenProductId == "") this.fullscreenProductId = this.products[0].id;
+            else {
+                while (true) {
+                    let index = this.products.findIndex(product => product.id == this.fullscreenProductId);
+                    if (index == this.products.length - 1) this.fullscreenProductId = this.products[0].id;
+                    else this.fullscreenProductId = this.products[index + 1].id;
+                    if (this.products.find(product => product.id == this.fullscreenProductId)?.available) break;
+                }
+            }
+            let currentProduct = this.products.find(product => product.id == this.fullscreenProductId) as product;
+            this.adOpacity = 1;
+            console.log("show ad " + currentProduct.name)
+            await sleep(config.advertisement.adDuration)
+            this.adOpacity = 0;
+            console.log("hide ad " + currentProduct.name)
+            await this.nextAd();
         }
     },
-    mounted() {
+    async mounted() {
+        window.document.title = "smoothiePOS - Advertisement";
         setInterval(() => {
             this.update();
         }, 1000);
+        await this.nextAd()
     }
 })
 </script>
 
 <template>
     <div id="content">
-        <h1 style="font-size: 70px; font-family: 'Brixton Outline Lt',cursive; text-align: center; padding: 0; margin: 10px">Unser
-            Angebot</h1>
+        <h1 style="font-size: 70px; font-family: 'Brixton Outline Lt',cursive; text-align: center; padding: 0; margin: 10px">
+            {{ config.advertisement.title }}</h1>
         <div id="products">
-            <div v-for="product in this.products" :key="product" :class="!product.available ? 'disabled product' : 'product'">
+            <div v-for="product in this.products" :key="product"
+                 :class="!product.available ? 'disabled product' : 'product'">
                 <img :src="product.image" alt="" class="product_image">
                 <div style="margin-left: 10px">
                     <h2 style="font-family: 'Brixton Outline Lt', serif;">{{ product.name }}</h2>
                     <h3 style="font-family: 'Brixton Lt',serif">{{ (product.price / 100).toFixed(2) }} €</h3>
-                    <p style="font-family: 'Brixton Lt',serif" class="product_description" v-html="product.available ? (product.description === null ? '&nbsp;' : product.description) : 'Kurzzeitig nicht verfügbar'"></p>
+                    <p style="font-family: 'Brixton Lt',serif" class="product_description"
+                       v-html="product.available ? (product.description === null ? '&nbsp;' : product.description) : 'Kurzzeitig nicht verfügbar'"></p>
                 </div>
             </div>
         </div>
     </div>
+    <img :src="config.adFullSizeImageBaseUrl + this.fullscreenProductId + '.png'" alt="" id="product_fullscreen_ad">
 </template>
 
 <style scoped>
@@ -96,6 +139,7 @@ export default defineComponent({
 .product_description b {
     font-family: "Brixton Outline Bld", serif;
 }
+
 .disabled .product_description {
     border: 1px solid gray;
     border-radius: 10px;
@@ -129,5 +173,16 @@ h3 {
     font-family: 'Arial', cursive;
     margin: 0;
     padding: 0;
+}
+
+#product_fullscreen_ad {
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    opacity: v-bind(adOpacity);
+    transition: opacity 1s;
 }
 </style>
