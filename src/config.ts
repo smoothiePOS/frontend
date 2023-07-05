@@ -1,5 +1,6 @@
 export default {
     baseUrl: "http://192.168.3.102:8080",
+    adFullSizeImageBaseUrl: "https://julius.familie-babies.de/static/img/",
     debug: true,
     dateFormat: {
         year: 'numeric',
