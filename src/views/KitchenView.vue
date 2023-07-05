@@ -237,6 +237,8 @@ export default defineComponent({
 
 .product_management_things {
     display: flex;
+    flex-wrap: wrap;
+    max-width: 100%;
 }
 
 .product_management_thing {

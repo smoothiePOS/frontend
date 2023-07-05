@@ -13,6 +13,7 @@
 
 .product_buttons div:first-of-type {
     display: flex;
+    flex-wrap: wrap;
 }
 
 .product_button {

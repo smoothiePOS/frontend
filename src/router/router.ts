@@ -5,6 +5,8 @@ import CustomerCashpointView from "@/views/CustomerCashpointView.vue";
 import CustomerCashpointSelectView from "@/views/CustomerCashpointSelectView.vue";
 import KitchenView from "@/views/KitchenView.vue";
 import CashpointSelectView from "@/views/CashpointSelectView.vue";
+import StatisticsView from "@/views/StatisticsView.vue";
+import AdvertisementView from "@/views/AdvertisementView.vue";
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -39,6 +41,16 @@ const routes: Array<RouteRecordRaw> = [
         path: '/kitchen',
         name: 'kitchen',
         component: KitchenView
+    },
+    {
+        path: '/ad',
+        name: 'ad',
+        component: AdvertisementView
+    },
+    {
+        path: '/statistics',
+        name: 'statistics',
+        component: StatisticsView
     }
 ]
 
