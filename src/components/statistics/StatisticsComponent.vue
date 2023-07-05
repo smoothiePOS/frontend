@@ -128,10 +128,3 @@ export default defineComponent({
         <canvas id="chart_revenue"></canvas>
     </div>
 </template>
-
-<style>
-body {
-    background-color: white;
-    color: black;
-}
-</style>
