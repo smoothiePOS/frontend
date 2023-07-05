@@ -160,7 +160,8 @@ export default defineComponent({
             debug: config.debug,
             enteredAmount: "0",
             showKeypad: false,
-            id: this.$props.id
+            id: this.$props.id,
+            extra: ""
         }
     },
     mounted() {
@@ -210,9 +211,17 @@ export default defineComponent({
             }
         },
         placeOrder() {
-            fetch(config.baseUrl + "/cashpoint/" + this.id + "/order/rt/confirm")
+            fetch(config.baseUrl + "/cashpoint/" + this.id + "/order/rt/confirm", {
+                method: "POST",
+                body: JSON.stringify({
+                    extra: this.extra === "" ? null : this.extra
+                })
+            })
                 .then(response => {
-                    if (response.status == 200) this.orders = {};
+                    if (response.status == 200) {
+                        this.orders = {};
+                        this.extra = "";
+                    }
                 })
         },
         fullscreen() {
@@ -383,6 +392,9 @@ export default defineComponent({
                                 return products[product].deposit * orders[product]
                             }).reduce((a, b) => a + b) / 100).toFixed(2)) : 0)).toFixed(2)
                         }}€</h2>
+                </div>
+                <div>
+                    <textarea style="margin-left: 5px; background: black; color: white; height: 100%; min-width: 20vw" placeholder="Extrawünsche" v-model="extra"/>
                 </div>
             </div>
         </div>
