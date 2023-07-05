@@ -1,5 +1,5 @@
 export default {
-    baseUrl: "http://192.168.3.102:8080",
+    baseUrl: "https://julius.familie-babies.de/smoothie/api/",
     debug: true,
     dateFormat: {
         year: 'numeric',
