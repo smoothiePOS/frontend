@@ -13,6 +13,9 @@
         <li>
             <router-link to="/ad">Advertisement View</router-link>
         </li>
+        <li>
+            <router-link to="/statistics">Statistics View</router-link>
+        </li>
     </ul>
 </template>
 
