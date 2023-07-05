@@ -1,6 +1,6 @@
 export default {
-    //baseUrl: "https://julius.familie-babies.de/smoothie/api",
-    baseUrl: "http://localhost:8080",
+    baseUrl: "https://julius.familie-babies.de/smoothie/api",
+    // baseUrl: "http://localhost:8080",
     adFullSizeImageBaseUrl: "https://julius.familie-babies.de/static/img/",
     debug: true,
     dateFormat: {
