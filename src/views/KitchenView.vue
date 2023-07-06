@@ -141,6 +141,10 @@ export default defineComponent({
 
 <style scoped>
 
+* {
+    user-select: none;
+}
+
 #content {
     display: flex;
     flex-direction: column;
