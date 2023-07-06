@@ -2,7 +2,6 @@
 
 import {defineComponent} from "vue";
 import config from "@/config";
-import {isFunction} from "@vue/shared";
 
 interface product {
     id: string
@@ -25,19 +24,21 @@ export default defineComponent({
             products: [] as product[],
             fullscreenProductId: "",
             adOpacity: 0,
-            firstRun: true
+            firstRun: true,
+            loadedImages: 0
         }
     },
     methods: {
-        update() {
+        async update() {
             fetch(config.baseUrl + "/advertisement/product")
                 .then(response => response.json())
                 .then(data => {
                     this.products = data;
                     if (this.firstRun) {
                         this.products.forEach(product => {
-                            let img = new Image()
-                            img.src = product.image
+                            let img = new Image();
+                            img.src = product.image;
+                            this.loadedImages++;
                         })
                         this.firstRun = false;
                     }
@@ -46,7 +47,7 @@ export default defineComponent({
         },
         async nextAd() {
             const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-            if (this.products.length == 0) {
+            if (this.products.length == 0 || this.loadedImages < this.products.length - 1) {
                 await sleep(1000);
                 await this.nextAd();
                 return;
@@ -62,6 +63,8 @@ export default defineComponent({
                 }
             }
             let currentProduct = this.products.find(product => product.id == this.fullscreenProductId) as product;
+            this.adOpacity = 0;
+            await sleep(1000);
             this.adOpacity = 1;
             console.log("show ad " + currentProduct.name)
             await sleep(config.advertisement.adDuration)
@@ -83,7 +86,7 @@ export default defineComponent({
 <template>
     <div id="content">
         <h1 style="font-size: 70px; font-family: 'Brixton Outline Lt',cursive; text-align: center; padding: 0; margin: 10px">
-            {{ config.advertisement.title }}</h1>
+            {{ config.advertisement.title }}<span v-show="loadedImages < products.length-1">{{ loadedImages }} / {{ products.length }} Bilder geladen...</span></h1>
         <div id="products">
             <div v-for="product in this.products" :key="product"
                  :class="!product.available ? 'disabled product' : 'product'">
@@ -102,7 +105,7 @@ export default defineComponent({
 
 <style scoped>
 #content {
-    width: 1920px;
+    width: 100vw;
     background: tan;
     position: absolute;
     top: 0;
@@ -122,8 +125,6 @@ export default defineComponent({
 
 #products {
     display: grid;
-    column-gap: 50px;
-    row-gap: 50px;
     margin: 10px;
     grid-template-columns: 33% 33% 33%;
 }
@@ -184,5 +185,6 @@ h3 {
     z-index: 10;
     opacity: v-bind(adOpacity);
     transition: opacity 1s;
+    object-fit: fill;
 }
 </style>
