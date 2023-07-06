@@ -52,7 +52,20 @@ export default defineComponent({
                 await this.nextAd();
                 return;
             }
+            this.nextAdUrl();
             await sleep(config.advertisement.adInterval);
+            let currentProduct = this.products.find(product => product.id == this.fullscreenProductId) as product;
+            if (!this.products.find(product => product.id == this.fullscreenProductId)!!.available)this.nextAdUrl();
+            this.adOpacity = 0;
+            await sleep(1000);
+            this.adOpacity = 1;
+            console.log("show ad " + currentProduct.name)
+            await sleep(config.advertisement.adDuration)
+            this.adOpacity = 0;
+            console.log("hide ad " + currentProduct.name)
+            await this.nextAd();
+        },
+        nextAdUrl() {
             if (this.fullscreenProductId == "") this.fullscreenProductId = this.products[0].id;
             else {
                 while (true) {
@@ -62,15 +75,6 @@ export default defineComponent({
                     if (this.products.find(product => product.id == this.fullscreenProductId)?.available) break;
                 }
             }
-            let currentProduct = this.products.find(product => product.id == this.fullscreenProductId) as product;
-            this.adOpacity = 0;
-            await sleep(1000);
-            this.adOpacity = 1;
-            console.log("show ad " + currentProduct.name)
-            await sleep(config.advertisement.adDuration)
-            this.adOpacity = 0;
-            console.log("hide ad " + currentProduct.name)
-            await this.nextAd();
         }
     },
     async mounted() {
