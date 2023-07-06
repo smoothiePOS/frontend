@@ -1,7 +1,7 @@
 export default {
     baseUrl: "https://julius.familie-babies.de/smoothie/api",
     // baseUrl: "http://localhost:8080",
-    adFullSizeImageBaseUrl: "https://julius.familie-babies.de/static/img/",
+    adFullSizeImageBaseUrl: "https://raw.githubusercontent.com/Julius-Babies/sommerfest2023_assets/main/",
     debug: true,
     dateFormat: {
         year: 'numeric',
@@ -13,7 +13,7 @@ export default {
         hour12: false
     },
     advertisement: {
-        fullSizeImageBaseUrl: "https://julius.familie-babies.de/static/img/",
+        fullSizeImageBaseUrl: "https://raw.githubusercontent.com/Julius-Babies/sommerfest2023_assets/main/",
         fullSizeImageExtension: ".png",
         adDuration: 7000,
         adInterval: 15000,
