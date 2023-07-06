@@ -15,8 +15,8 @@ export default {
     advertisement: {
         fullSizeImageBaseUrl: "https://raw.githubusercontent.com/Julius-Babies/sommerfest2023_assets/main/",
         fullSizeImageExtension: ".png",
-        adDuration: 7000,
+        adDuration: 11000,
         adInterval: 15000,
-        title: "Smoothiestand Klasse 9a - Unser Angebot",
+        title: "Smoothiestand Klasse 9a - zzg. 1€ Pfand pro Becher",
     }
 }
